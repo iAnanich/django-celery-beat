@@ -3,7 +3,7 @@ from __future__ import absolute_import, unicode_literals
 
 from django import forms
 from django.conf import settings
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.db.models import When, Value, Case
 from django.forms.widgets import Select
 from django.template.defaultfilters import pluralize
@@ -196,6 +196,14 @@ class PeriodicTaskAdmin(admin.ModelAdmin):
                   loads(task.args),
                   loads(task.kwargs))
                  for task in queryset]
+        
+        if None in tasks:
+            self.message_user(
+                request,
+                _('task {queryset[tasks.index(None)].task} not found'),
+                level=messages.ERROR,
+            )
+            
         task_ids = [task.delay(*args, **kwargs)
                     for task, args, kwargs in tasks]
         tasks_run = len(task_ids)
